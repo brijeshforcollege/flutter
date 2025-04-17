@@ -1,6 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:skillxchange/data/mock_data.dart';
-import 'package:skillxchange/models/skill_model.dart';
 
 class PostSkillScreen extends StatefulWidget {
   const PostSkillScreen({super.key});
@@ -15,6 +15,7 @@ class _PostSkillScreenState extends State<PostSkillScreen> {
   final _descriptionController = TextEditingController();
   final _coinsController = TextEditingController(text: '30');
   final _maxParticipantsController = TextEditingController(text: '10');
+  DateTime _selectedDate = DateTime.now().add(const Duration(days: 7));
   String _selectedCategory = 'Programming';
   String _selectedTimeSlot = '10:00 AM - 12:00 PM';
   bool _isLoading = false;
@@ -41,6 +42,20 @@ class _PostSkillScreenState extends State<PostSkillScreen> {
     _coinsController.dispose();
     _maxParticipantsController.dispose();
     super.dispose();
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
   }
 
   @override
@@ -174,6 +189,26 @@ class _PostSkillScreenState extends State<PostSkillScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    InkWell(
+                      onTap: () => _selectDate(context),
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Session Date',
+                          border: OutlineInputBorder(),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "${_selectedDate.toLocal()}".split(' ')[0],
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            const Icon(Icons.calendar_today),
+                          ],
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
@@ -198,36 +233,69 @@ class _PostSkillScreenState extends State<PostSkillScreen> {
     );
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
-      // Simulate API call delay
-      Future.delayed(const Duration(seconds: 2), () {
-        final newSkill = Skill(
-          id: '${mockSkills.length + 1}',
-          title: _titleController.text,
-          description: _descriptionController.text,
-          teacherName: currentUser.name,
-          teacherImage: currentUser.imageUrl,
-          timeSlot: _selectedTimeSlot,
-          skillCoins: int.parse(_coinsController.text),
-          date: DateTime.now().add(const Duration(days: 7)),
-          category: _selectedCategory,
-          maxParticipants: int.parse(_maxParticipantsController.text),
-          currentParticipants: 0,
-        );
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) {
+          throw Exception("User not logged in.");
+        }
 
-        mockSkills.insert(0, newSkill);
-        
-        setState(() {
-          _isLoading = false;
-        });
-        
+        // Get user data from Firestore (if you store additional user info there)
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        final userData = userDoc.exists ? userDoc.data() as Map<String, dynamic> : null;
+        final userName = userData?['name']?.toString() ?? user.displayName ?? 'Anonymous';
+
+        // Generate dummy Google Meet link
+        String meetLink = "https://meet.google.com/${DateTime.now().millisecondsSinceEpoch}";
+
+        final skillData = {
+          'title': _titleController.text,
+          'description': _descriptionController.text,
+          'teacherId': user.uid,
+          'teacherName': userName,
+          'teacherEmail': user.email,
+          'teacherImage': user.photoURL ?? '', // or use placeholder
+          'timeSlot': _selectedTimeSlot,
+          'category': _selectedCategory,
+          'skillCoins': int.parse(_coinsController.text),
+          'maxParticipants': int.parse(_maxParticipantsController.text),
+          'currentParticipants': 0,
+          'datePosted': Timestamp.now(),
+          'scheduledDate': Timestamp.fromDate(_selectedDate),
+          'meetLink': meetLink,
+          'status': 'upcoming', // can be 'upcoming', 'completed', 'cancelled'
+        };
+
+        await FirebaseFirestore.instance.collection('skills').add(skillData);
+
+        if (!mounted) return;
         Navigator.pop(context);
-      });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Skill posted successfully!')),
+        );
+      } catch (e) {
+        debugPrint('Error posting skill: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to post skill: ${e.toString()}')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
   }
 }

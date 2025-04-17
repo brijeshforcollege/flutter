@@ -1,11 +1,9 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:skillxchange/auth/signup.dart';
 import 'package:skillxchange/common/button.dart';
 import 'package:skillxchange/common/textfield.dart';
-import 'package:skillxchange/navbar/navbar.dart';
-// import 'package:skillxchange/screens/home.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:skillxchange/screens/main_app_screen.dart';
 
 class Login extends StatefulWidget {
@@ -16,20 +14,28 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  final TextEditingController emailcontroller = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
 
-  void loginuser() async {
+  void loginUser() async {
     setState(() {
       isLoading = true;
     });
+
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: emailcontroller.text.trim(),
-          password: passwordController.text.trim());
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Login Successful!")),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainAppScreen()),
       );
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -52,88 +58,71 @@ class _LoginState extends State<Login> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                height: 100,
-              ),
+              const SizedBox(height: 100),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
-                      height: 100,
-                      width: 100,
-                      child: Center(child: Image.asset("assets/key.png"))),
+                    height: 100,
+                    width: 100,
+                    child: Image.asset("assets/key.png"),
+                  ),
                 ],
               ),
-              SizedBox(
-                height: 40,
-              ),
+              const SizedBox(height: 40),
               Text(
                 "Login",
                 style: GoogleFonts.poppins(
-                    fontSize: 30, fontWeight: FontWeight.bold),
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              SizedBox(
-                height: 5,
-              ),
+              const SizedBox(height: 5),
               Text(
                 "Login into your account for buying new shoes",
                 style: GoogleFonts.poppins(),
               ),
-              SizedBox(
-                height: 40,
-              ),
+              const SizedBox(height: 40),
               CustomTextField(
                 text: "Enter E-mail",
+                controller: emailController,
               ),
-              SizedBox(
-                height: 10,
-              ),
+              const SizedBox(height: 10),
               CustomTextField(
-                text: "Enter PassWord",
+                text: "Enter Password",
+                controller: passwordController,
+                obscureText: true,
               ),
-              SizedBox(
-                height: 20,
-              ),
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Text(
-                    "Forgot Password ? ",
+                    "Forgot Password?",
                     style: GoogleFonts.poppins(),
                   ),
                 ],
               ),
-              SizedBox(
-                height: 20,
-              ),
+              const SizedBox(height: 20),
               isLoading
-                  ? const CircularProgressIndicator()
+                  ? const Center(child: CircularProgressIndicator())
                   : CustomButton(
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const MainAppScreen()),
-                        );
-                      },
+                      onTap: loginUser,
                       text: "Login",
                     ),
-              SizedBox(
-                height: 40,
-              ),
+              const SizedBox(height: 40),
               InkWell(
                 onTap: () {
                   Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Signup(),
-                      ));
+                    context,
+                    MaterialPageRoute(builder: (context) => const Signup()),
+                  );
                 },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Don't have a account ? ",
+                      "Don't have an account? ",
                       style: GoogleFonts.poppins(),
                     ),
                     Text(

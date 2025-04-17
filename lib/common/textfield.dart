@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CustomTextField extends StatelessWidget {
-  final String text; // Text to display inside the text field
+  final String text;
+  final TextEditingController? controller;
+  final bool obscureText;
 
   const CustomTextField({
     Key? key,
     required this.text,
+    this.controller,
+    this.obscureText = false,
   }) : super(key: key);
 
   @override
@@ -17,7 +21,8 @@ class CustomTextField extends StatelessWidget {
         color: Colors.white,
       ),
       child: TextField(
-        controller: TextEditingController(),
+        controller: controller,
+        obscureText: obscureText,
         decoration: InputDecoration(
           hintText: text,
           hintStyle: GoogleFonts.poppins(
@@ -32,10 +37,8 @@ class CustomTextField extends StatelessWidget {
             horizontal: 16.0,
           ),
           enabledBorder: OutlineInputBorder(
-            borderSide:
-                BorderSide(color: Colors.black12), // Default border color
-            borderRadius:
-                BorderRadius.circular(15), // Optional: rounded corners
+            borderSide: BorderSide(color: Colors.black12),
+            borderRadius: BorderRadius.circular(15),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: const BorderRadius.all(

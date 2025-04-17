@@ -4,16 +4,19 @@ import 'package:firebase_core/firebase_core.dart';
 // import 'firebase_options.dart'; // This will be generated
 
 void main() async {
-  // WidgetsFlutterBinding.ensureInitialized();
-  
-  // // Initialize Firebase with platform-specific options
-  // await Firebase.initializeApp(
-  //   options: DefaultFirebaseOptions.currentPlatform,
-  // );
-  
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: const FirebaseOptions(
+    apiKey: "AIzaSyBJbBtuuEaIn75nHibMH1l6TsMFfcAI1vI",
+    authDomain: "skillxchange-2381a.firebaseapp.com",
+    projectId: "skillxchange-2381a",
+    storageBucket: "skillxchange-2381a.firebasestorage.app",
+    messagingSenderId: "415393619969",
+    appId: "1:415393619969:web:fc45b978d48170d7e1e000",
+    measurementId: "G-YVD3LM7M6L")
+  );
+  runApp(MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
